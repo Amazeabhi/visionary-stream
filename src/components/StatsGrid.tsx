@@ -59,22 +59,28 @@ export function StatsGrid({ stats }: StatsGridProps) {
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-      {statItems.map((item) => (
-        <div
-          key={item.label}
-          className={`glass rounded-lg p-4 border ${item.borderColor} animate-fade-in`}
-        >
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${item.bgColor}`}>
-              <item.icon className={`w-5 h-5 ${item.color}`} />
-            </div>
-            <div>
-              <p className="text-2xl font-display font-bold tabular-nums">{item.value.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">{item.label}</p>
+      {statItems.map((item) => {
+        const displayValue = typeof item.value === 'number' && !isNaN(item.value) 
+          ? item.value.toLocaleString() 
+          : '0';
+        
+        return (
+          <div
+            key={item.label}
+            className={`glass rounded-lg p-4 border ${item.borderColor} animate-fade-in`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${item.bgColor}`}>
+                <item.icon className={`w-5 h-5 ${item.color}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold tabular-nums font-sans">{displayValue}</p>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

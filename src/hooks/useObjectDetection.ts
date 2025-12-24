@@ -27,6 +27,12 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
   const frameCountRef = useRef(0);
   const lastFpsUpdateRef = useRef(Date.now());
   const fpsCountRef = useRef(0);
+  const isDetectingRef = useRef(false);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    isDetectingRef.current = isDetecting;
+  }, [isDetecting]);
 
   // Load COCO-SSD model
   useEffect(() => {
@@ -47,7 +53,8 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
   }, []);
 
   const detect = useCallback(async (video: HTMLVideoElement): Promise<Detection[]> => {
-    if (!model || !video || video.readyState !== 4) return [];
+    // Guard against stale closures - check ref, not state
+    if (!isDetectingRef.current || !model || !video || video.readyState !== 4) return [];
 
     try {
       const predictions = await model.detect(video);
