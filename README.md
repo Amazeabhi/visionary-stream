@@ -1,45 +1,38 @@
-# VisionAI - Real-time Object Detection
+# Object Detection Web App
 
-A browser-based real-time object detection application powered by TensorFlow.js and the COCO-SSD model. All processing happens locally in your browser – no data is sent to any server.
+<p align="center">
+  <a href="https://object-detection.lovable.app" target="_blank">
+    <img src="https://img.shields.io/badge/🚀 Launch%20App-blue?style=for-the-badge" />
+  </a>
+</p>
 
-![VisionAI](https://img.shields.io/badge/TensorFlow.js-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+## 📌 Project Info
+A web-based object detection application built using modern web technologies.
 
-## ✨ Features
+## 🛠️ Tech Stack
+- Vite  
+- TypeScript  
+- React  
+- Tailwind CSS  
+- shadcn-ui  
 
-- **🎯 80+ Object Classes** - Detect persons, vehicles, animals, and common everyday objects
-- **⚡ Real-time Processing** - Smooth detection powered by TensorFlow.js running entirely in your browser
-- **📊 Detection Logs** - View detection history and export as JSON for analysis
-- **🔒 Privacy First** - All processing happens locally; no images or data leave your device
-- **🎛️ Adjustable Settings** - Fine-tune confidence threshold and detection interval
-- **📱 Multi-camera Support** - Switch between available cameras on your device
+## 🚀 Run Locally
 
-## 🚀 Getting Started
+Make sure you have Node.js and npm installed.
 
-### Prerequisites
-
-- Node.js (v18 or higher recommended)
-- npm or bun
-
-### Installation
-
-```bash
+```sh
 # Clone the repository
-git clone <your-repo-url>
+git clone <YOUR_REPO_URL>
 
-# Navigate to the project directory
-cd <project-name>
+# Go to project directory
+cd <YOUR_PROJECT_NAME>
 
 # Install dependencies
 npm install
 
-# Start the development server
+# Start development server
 npm run dev
-```
 
-The app will be available at `http://localhost:5173`
 
 ## 🛠️ Tech Stack
 
