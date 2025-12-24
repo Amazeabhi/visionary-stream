@@ -1,7 +1,15 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import * as cocoSsd from '@tensorflow-models/coco-ssd';
-import '@tensorflow/tfjs';
-import { Detection, DetectionLog, DetectionStats, getDetectionCategory } from '@/types/detection';
+import type { Detection, DetectionLog, DetectionStats } from '@/types/detection';
+import { getDetectionCategory } from '@/types/detection';
+
+// Dynamic import types
+type CocoSsdModel = {
+  detect: (video: HTMLVideoElement) => Promise<Array<{
+    class: string;
+    score: number;
+    bbox: [number, number, number, number];
+  }>>;
+};
 
 interface UseObjectDetectionOptions {
   confidenceThreshold: number;
@@ -9,7 +17,7 @@ interface UseObjectDetectionOptions {
 }
 
 export function useObjectDetection(options: UseObjectDetectionOptions) {
-  const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
+  const [model, setModel] = useState<CocoSsdModel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDetecting, setIsDetecting] = useState(false);
   const [currentDetections, setCurrentDetections] = useState<Detection[]>([]);
@@ -34,17 +42,18 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
     isDetectingRef.current = isDetecting;
   }, [isDetecting]);
 
-  // Load COCO-SSD model - using mobilenet_v2 for better accuracy
+  // Load COCO-SSD model dynamically to avoid build issues
   useEffect(() => {
     const loadModel = async () => {
       try {
         setIsLoading(true);
-        // Using mobilenet_v2 instead of lite_mobilenet_v2 for improved accuracy
-        // This model is larger but provides better object classification
+        // Dynamic imports to avoid build issues with TensorFlow
+        await import('@tensorflow/tfjs');
+        const cocoSsd = await import('@tensorflow-models/coco-ssd');
         const loadedModel = await cocoSsd.load({
           base: 'mobilenet_v2',
         });
-        setModel(loadedModel);
+        setModel(loadedModel as CocoSsdModel);
         setIsLoading(false);
       } catch (error) {
         console.error('Failed to load model:', error);
