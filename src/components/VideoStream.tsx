@@ -34,20 +34,35 @@ export function VideoStream({ confidenceThreshold, detectionInterval, onDetectio
     }
   }, [videoRef]);
 
-  // Run detection loop
+  // Run detection loop - only when both streaming AND detecting are enabled
   useEffect(() => {
-    if (isDetecting && isStreaming && videoRef.current) {
-      intervalRef.current = setInterval(() => {
-        detect(videoRef.current!);
-      }, detectionInterval);
-
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
-      };
+    // Clear any existing interval first
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = undefined;
     }
-  }, [isDetecting, isStreaming, detect, detectionInterval]);
+
+    // Only start detection if both conditions are met
+    if (!isDetecting || !isStreaming) {
+      return;
+    }
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    intervalRef.current = setInterval(() => {
+      if (video.readyState === 4) {
+        detect(video);
+      }
+    }, detectionInterval);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
+      }
+    };
+  }, [isDetecting, isStreaming, detect, detectionInterval, videoRef]);
 
   const handleToggleStream = async () => {
     if (isStreaming) {
