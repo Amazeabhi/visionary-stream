@@ -19,6 +19,7 @@ interface UseObjectDetectionOptions {
 export function useObjectDetection(options: UseObjectDetectionOptions) {
   const [model, setModel] = useState<CocoSsdModel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
   const [currentDetections, setCurrentDetections] = useState<Detection[]>([]);
   const [detectionLogs, setDetectionLogs] = useState<DetectionLog[]>([]);
@@ -44,25 +45,41 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
 
   // Load COCO-SSD model dynamically to avoid build issues
   useEffect(() => {
+    let mounted = true;
+    
     const loadModel = async () => {
       try {
         setIsLoading(true);
+        setLoadError(null);
+        
         // Dynamic imports to avoid build issues with TensorFlow
-        await import('@tensorflow/tfjs');
+        const tf = await import('@tensorflow/tfjs');
+        await tf.ready();
+        
         const cocoSsd = await import('@tensorflow-models/coco-ssd');
         const loadedModel = await cocoSsd.load({
-          base: 'mobilenet_v2',
+          base: 'lite_mobilenet_v2', // Using lite version for faster loading
         });
-        setModel(loadedModel as CocoSsdModel);
-        setIsLoading(false);
+        
+        if (mounted) {
+          setModel(loadedModel as CocoSsdModel);
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error('Failed to load model:', error);
-        setIsLoading(false);
+        if (mounted) {
+          setLoadError(error instanceof Error ? error.message : 'Failed to load AI model');
+          setIsLoading(false);
+        }
       }
     };
+    
     loadModel();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
-
   const detect = useCallback(async (video: HTMLVideoElement): Promise<Detection[]> => {
     // Guard against stale closures - check ref, not state
     if (!isDetectingRef.current || !model || !video || video.readyState !== 4) return [];
@@ -186,6 +203,7 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
   return {
     model,
     isLoading,
+    loadError,
     isDetecting,
     currentDetections,
     detectionLogs,
