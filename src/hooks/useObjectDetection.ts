@@ -2,22 +2,22 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Detection, DetectionLog, DetectionStats } from '@/types/detection';
 import { getDetectionCategory } from '@/types/detection';
 
-// Dynamic import types
-type CocoSsdModel = {
-  detect: (video: HTMLVideoElement) => Promise<Array<{
-    class: string;
-    score: number;
-    bbox: [number, number, number, number];
-  }>>;
-};
-
 interface UseObjectDetectionOptions {
   confidenceThreshold: number;
   detectionInterval: number;
 }
 
+// Placeholder type for the model
+type DetectionModel = {
+  detect: (video: HTMLVideoElement) => Promise<Array<{
+    class: string;
+    score: number;
+    bbox: [number, number, number, number];
+  }>>;
+} | null;
+
 export function useObjectDetection(options: UseObjectDetectionOptions) {
-  const [model, setModel] = useState<CocoSsdModel | null>(null);
+  const [model, setModel] = useState<DetectionModel>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
@@ -38,12 +38,11 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
   const fpsCountRef = useRef(0);
   const isDetectingRef = useRef(false);
   
-  // Keep ref in sync with state
   useEffect(() => {
     isDetectingRef.current = isDetecting;
   }, [isDetecting]);
 
-  // Load COCO-SSD model dynamically to avoid build issues
+  // Load model with better error handling
   useEffect(() => {
     let mounted = true;
     
@@ -52,17 +51,22 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
         setIsLoading(true);
         setLoadError(null);
         
-        // Dynamic imports to avoid build issues with TensorFlow
-        const tf = await import('@tensorflow/tfjs');
+        // Dynamically import TensorFlow and COCO-SSD
+        const [tf, cocoSsd] = await Promise.all([
+          import('@tensorflow/tfjs'),
+          import('@tensorflow-models/coco-ssd')
+        ]);
+        
         await tf.ready();
         
-        const cocoSsd = await import('@tensorflow-models/coco-ssd');
+        if (!mounted) return;
+        
         const loadedModel = await cocoSsd.load({
-          base: 'lite_mobilenet_v2', // Using lite version for faster loading
+          base: 'lite_mobilenet_v2',
         });
         
         if (mounted) {
-          setModel(loadedModel as CocoSsdModel);
+          setModel(loadedModel);
           setIsLoading(false);
         }
       } catch (error) {
@@ -74,14 +78,16 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
       }
     };
     
-    loadModel();
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(loadModel, 100);
     
     return () => {
       mounted = false;
+      clearTimeout(timer);
     };
   }, []);
+
   const detect = useCallback(async (video: HTMLVideoElement): Promise<Detection[]> => {
-    // Guard against stale closures - check ref, not state
     if (!isDetectingRef.current || !model || !video || video.readyState !== 4) return [];
 
     try {
@@ -98,7 +104,6 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
           category: getDetectionCategory(pred.class),
         }));
 
-      // Update FPS
       fpsCountRef.current++;
       const now = Date.now();
       if (now - lastFpsUpdateRef.current >= 1000) {
@@ -107,10 +112,8 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
         lastFpsUpdateRef.current = now;
       }
 
-      // Update current detections
       setCurrentDetections(detections);
 
-      // Log detections if any found
       if (detections.length > 0) {
         frameCountRef.current++;
         const log: DetectionLog = {
@@ -122,7 +125,6 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
         
         setDetectionLogs(prev => [log, ...prev].slice(0, 100));
 
-        // Update stats
         setStats(prev => {
           const personCount = detections.filter(d => d.category === 'person').length;
           const vehicleCount = detections.filter(d => d.category === 'vehicle').length;
