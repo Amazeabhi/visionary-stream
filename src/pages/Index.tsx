@@ -8,8 +8,9 @@ import { useWebcam } from '@/hooks/useWebcam';
 import { Scan, Github, Shield, Zap } from 'lucide-react';
 
 const Index = () => {
-  const [confidenceThreshold, setConfidenceThreshold] = useState(0.5);
-  const [detectionInterval, setDetectionInterval] = useState(100);
+  // Higher default threshold (0.6) for better accuracy, reducing false positives
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.6);
+  const [detectionInterval, setDetectionInterval] = useState(150);
 
   const objectDetection = useObjectDetection({
     confidenceThreshold,

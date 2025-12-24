@@ -34,13 +34,15 @@ export function useObjectDetection(options: UseObjectDetectionOptions) {
     isDetectingRef.current = isDetecting;
   }, [isDetecting]);
 
-  // Load COCO-SSD model
+  // Load COCO-SSD model - using mobilenet_v2 for better accuracy
   useEffect(() => {
     const loadModel = async () => {
       try {
         setIsLoading(true);
+        // Using mobilenet_v2 instead of lite_mobilenet_v2 for improved accuracy
+        // This model is larger but provides better object classification
         const loadedModel = await cocoSsd.load({
-          base: 'lite_mobilenet_v2',
+          base: 'mobilenet_v2',
         });
         setModel(loadedModel);
         setIsLoading(false);
